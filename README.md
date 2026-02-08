@@ -169,3 +169,9 @@ logAudit(uint256 proposalId, string memory ipfsHash)
 | **DAOGovernor** | `0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9` | Governor implementation |
 
 > ⚠️ **Note:** Localhost contracts only exist when running `npx hardhat node`
+
+---
+
+## 🚀 Live Deployment
+
+**Frontend Application:** https://guard-cn4p55rao-ojhasanay-2913s-projects.vercel.app/
