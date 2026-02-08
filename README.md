@@ -123,3 +123,5 @@ A standalone tool for Proposers (pre-submission) and Voters (quick insights).
 | **DAOGovernor** | `0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9` | Governor implementation |
 
 > ⚠️ Localhost contracts only exist when running `npx hardhat node`
+
+Deploy link: https://guard-cn4p55rao-ojhasanay-2913s-projects.vercel.app/
