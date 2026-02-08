@@ -1,0 +1,43 @@
+{
+  "name": "ai-guard-dao",
+  "version": "1.0.0",
+  "description": "AI-powered DAO treasury protection on Monad",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd react-app && npm run dev",
+    "dev:client": "cd react-app && npm run dev:client",
+    "dev:server": "cd react-app && npm run dev:server",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:monad": "hardhat run scripts/deploy.js --network monadTestnet",
+    "setup:demo": "hardhat run scripts/setup-demo.js --network localhost",
+    "setup:env": "npx ts-node scripts/setup-env.ts",
+    "setup:env:seed": "npx ts-node scripts/setup-env.ts --seed",
+    "node": "hardhat node",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "start:local": "start-local.bat"
+  },
+  "keywords": [
+    "dao",
+    "governance",
+    "ai",
+    "monad",
+    "blockchain"
+  ],
+  "author": "AI Guard Dog Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.10.0",
+    "hardhat": "^2.19.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "zod": "^4.3.6"
+  }
+}

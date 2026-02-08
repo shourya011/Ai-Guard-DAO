@@ -1,0 +1,136 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }
+    ],
+    "name": "ProposalCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "proposer", "type": "address" },
+      { "indexed": false, "internalType": "uint8", "name": "proposalType", "type": "uint8" },
+      { "indexed": false, "internalType": "string", "name": "title", "type": "string" },
+      { "indexed": false, "internalType": "uint256", "name": "startBlock", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "endBlock", "type": "uint256" }
+    ],
+    "name": "ProposalCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }
+    ],
+    "name": "ProposalExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "eta", "type": "uint256" }
+    ],
+    "name": "ProposalQueued",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "getProposalCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getProposalData",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          { "internalType": "address", "name": "proposer", "type": "address" },
+          { "internalType": "uint8", "name": "proposalType", "type": "uint8" },
+          { "internalType": "uint256", "name": "createdAt", "type": "uint256" },
+          { "internalType": "uint256", "name": "startBlock", "type": "uint256" },
+          { "internalType": "uint256", "name": "endBlock", "type": "uint256" },
+          { "internalType": "uint256", "name": "forVotes", "type": "uint256" },
+          { "internalType": "uint256", "name": "againstVotes", "type": "uint256" },
+          { "internalType": "uint256", "name": "abstainVotes", "type": "uint256" },
+          { "internalType": "bool", "name": "canceled", "type": "bool" },
+          { "internalType": "bool", "name": "executed", "type": "bool" }
+        ],
+        "internalType": "struct IProposalManager.ProposalData",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getProposalMetadata",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "string", "name": "title", "type": "string" },
+          { "internalType": "string", "name": "description", "type": "string" },
+          { "internalType": "string", "name": "category", "type": "string" },
+          { "internalType": "string", "name": "discussionURL", "type": "string" },
+          { "internalType": "string", "name": "proposalIPFS", "type": "string" }
+        ],
+        "internalType": "struct IProposalManager.ProposalMetadata",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getProposalActions",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "address", "name": "target", "type": "address" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "string", "name": "description", "type": "string" }
+        ],
+        "internalType": "struct IProposalManager.ProposalAction[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getProposalState",
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getProposalTimeline",
+    "outputs": [
+      { "internalType": "uint256", "name": "startBlock", "type": "uint256" },
+      { "internalType": "uint256", "name": "endBlock", "type": "uint256" },
+      { "internalType": "uint256", "name": "eta", "type": "uint256" },
+      { "internalType": "uint256", "name": "createdAt", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

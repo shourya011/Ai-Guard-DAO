@@ -1,0 +1,36 @@
+{
+  "name": "ai-guard-dao",
+  "version": "1.0.0",
+  "description": "AI Guard Dog Intern - DAO Treasury Protection System",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:monad": "npx hardhat run scripts/deploy.js --network monadTestnet",
+    "setup-demo": "npx hardhat run scripts/setup-demo.js --network localhost",
+    "node": "npx hardhat node",
+    "backend": "node backend/server.js",
+    "export-abi": "node scripts/export-abi.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ethers": "^6.9.0",
+    "dotenv": "^16.3.1",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "keywords": [
+    "dao",
+    "governance",
+    "ai",
+    "monad",
+    "web3"
+  ],
+  "author": "AI Guard Dog Team",
+  "license": "MIT"
+}

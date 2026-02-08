@@ -1,0 +1,40 @@
+{
+  "name": "@ai-guard-dao/contracts-sdk",
+  "version": "1.0.0",
+  "description": "TypeChain generated contract bindings for AI Guard DAO",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "clean": "rimraf dist typechain-types",
+    "typechain": "typechain --target ethers-v6 --out-dir src/typechain-types ./abis/*.json",
+    "build": "npm run clean && npm run typechain && tsc",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "ethers": "^6.11.0"
+  },
+  "devDependencies": {
+    "@typechain/ethers-v6": "^0.5.1",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "ethers": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai-guard-dao",
+    "smart-contracts",
+    "typechain",
+    "ethereum",
+    "monad"
+  ],
+  "license": "MIT"
+}

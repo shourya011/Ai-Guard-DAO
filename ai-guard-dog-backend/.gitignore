@@ -1,0 +1,48 @@
+# Ignore node_modules
+node_modules/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+env/
+.env/
+*.egg-info/
+.eggs/
+*.egg
+
+# Docker
+.docker/
+
+# Testing
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build
+build/
+*.tsbuildinfo

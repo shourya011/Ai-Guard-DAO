@@ -1,0 +1,623 @@
+// AI Guard DAO - Prisma Schema
+// PostgreSQL Database Schema
+// Version: 2.0.0 | January 2026
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp"), pgvector(map: "vector")]
+}
+
+// ============================================
+// ENUM TYPES
+// ============================================
+
+enum UserRole {
+  ADMIN
+  REVIEWER
+  PROPOSER
+  AI_AGENT
+}
+
+enum ProposalStatus {
+  PENDING_ANALYSIS
+  PROCESSING
+  NEEDS_REVIEW
+  AUTO_APPROVED
+  AUTO_REJECTED
+  MANUALLY_APPROVED
+  MANUALLY_REJECTED
+  EXECUTED
+  EXPIRED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AnalysisStatus {
+  QUEUED
+  PROCESSING
+  COMPLETE
+  FAILED
+}
+
+enum VoteType {
+  FOR
+  AGAINST
+  ABSTAIN
+}
+
+enum AuditAction {
+  SESSION_CREATED
+  SESSION_EXPIRED
+  DELEGATION_CREATED
+  DELEGATION_REVOKED
+  ANALYSIS_STARTED
+  ANALYSIS_COMPLETED
+  VOTE_CAST_AUTO
+  VOTE_CAST_MANUAL
+  HIGH_RISK_FLAGGED
+  PROPOSAL_APPROVED
+  PROPOSAL_REJECTED
+  ADMIN_ACTION
+}
+
+// ============================================
+// SESSIONS TABLE
+// ============================================
+
+/// Stores SIWE authentication sessions for wallet-based auth
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  walletId     String   @db.Uuid
+  wallet       Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  /// Session token (JWT or opaque token)
+  sessionToken String   @unique @db.VarChar(512)
+  
+  /// SIWE nonce used for this session
+  nonce        String   @db.VarChar(64)
+  
+  /// Chain ID for the signed message
+  chainId      Int
+  
+  /// User agent string for security tracking
+  userAgent    String?  @db.VarChar(512)
+  
+  /// IP address (hashed for privacy)
+  ipHash       String?  @db.VarChar(64)
+  
+  /// Session validity timestamps
+  issuedAt     DateTime @default(now())
+  expiresAt    DateTime
+  
+  /// Revocation tracking
+  revokedAt    DateTime?
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([walletId])
+  @@index([sessionToken])
+  @@index([expiresAt])
+  @@index([isActive, expiresAt])
+  @@map("sessions")
+}
+
+// ============================================
+// WALLETS TABLE
+// ============================================
+
+/// Stores all wallet addresses (users, proposers, AI agents)
+model Wallet {
+  id              String    @id @default(uuid()) @db.Uuid
+  
+  /// Ethereum wallet address (checksummed)
+  address         String    @unique @db.VarChar(42)
+  
+  /// ENS name if available
+  ensName         String?   @db.VarChar(255)
+  
+  /// User role in the system
+  role            UserRole  @default(PROPOSER)
+  
+  /// Display name (user-defined)
+  displayName     String?   @db.VarChar(100)
+  
+  /// Reputation score (0-100, calculated from historical activity)
+  reputationScore Int       @default(50)
+  
+  /// Token balance cache (GUARD tokens)
+  tokenBalance    Decimal?  @db.Decimal(38, 18)
+  
+  /// Wallet metadata (flexible JSONB for additional info)
+  /// Schema: { firstTxDate, txCount, daoMemberships, verifications }
+  metadata        Json?     @db.JsonB
+  
+  /// Risk threshold preference (0-100)
+  defaultRiskThreshold Int  @default(50)
+  
+  /// Whether user requires approval for all votes
+  requiresApproval Boolean  @default(false)
+  
+  /// First seen timestamp
+  firstSeenAt     DateTime  @default(now())
+  
+  /// Last activity timestamp
+  lastActiveAt    DateTime  @default(now())
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  sessions        Session[]
+  proposals       Proposal[]    @relation("ProposerWallet")
+  analyses        Analysis[]    @relation("RequestedByWallet")
+  auditLogs       AuditLog[]    @relation("WalletAuditLogs")
+  delegations     Delegation[]
+
+  @@index([address])
+  @@index([reputationScore])
+  @@index([role])
+  @@map("wallets")
+}
+
+// ============================================
+// DELEGATIONS TABLE
+// ============================================
+
+/// Tracks user voting power delegations to the AI agent per DAO
+model Delegation {
+  id              String   @id @default(uuid()) @db.Uuid
+  
+  walletId        String   @db.Uuid
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  /// DAO Governor contract address
+  daoGovernor     String   @db.VarChar(42)
+  
+  /// DAO name for display
+  daoName         String?  @db.VarChar(255)
+  
+  /// Chain ID where the DAO exists
+  chainId         Int
+  
+  /// User's risk threshold for this DAO (0-100)
+  riskThreshold   Int      @default(50)
+  
+  /// Whether AI should ask before every vote
+  requiresApproval Boolean @default(false)
+  
+  /// Delegation active status
+  isActive        Boolean  @default(true)
+  
+  /// On-chain delegation transaction hash
+  delegationTxHash String? @db.VarChar(66)
+  
+  delegatedAt     DateTime @default(now())
+  revokedAt       DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([walletId, daoGovernor])
+  @@index([walletId])
+  @@index([daoGovernor])
+  @@index([isActive])
+  @@map("delegations")
+}
+
+// ============================================
+// PROPOSALS TABLE
+// ============================================
+
+/// Stores all proposals received from DAOs for analysis
+model Proposal {
+  id                  String         @id @default(uuid()) @db.Uuid
+  
+  /// On-chain proposal ID
+  onchainProposalId   String         @db.VarChar(100)
+  
+  /// DAO Governor contract address
+  daoGovernor         String         @db.VarChar(42)
+  
+  /// DAO name
+  daoName             String?        @db.VarChar(255)
+  
+  /// Chain ID
+  chainId             Int
+  
+  /// IPFS hash of the proposal content (if available)
+  ipfsHash            String?        @db.VarChar(64)
+  
+  /// Proposal title
+  title               String         @db.VarChar(500)
+  
+  /// Full proposal description/body
+  description         String         @db.Text
+  
+  /// Proposer's wallet address
+  proposerAddress     String         @db.VarChar(42)
+  
+  /// Proposer wallet relation (if tracked)
+  proposerId          String?        @db.Uuid
+  proposer            Wallet?        @relation("ProposerWallet", fields: [proposerId], references: [id])
+  
+  /// Financial details
+  requestedAmount     Decimal?       @db.Decimal(38, 18)
+  tokenSymbol         String?        @db.VarChar(20)
+  recipientAddress    String?        @db.VarChar(42)
+  
+  /// Proposal status
+  status              ProposalStatus @default(PENDING_ANALYSIS)
+  
+  /// Composite risk score from AI analysis (0-100)
+  compositeRiskScore  Float?
+  
+  /// Risk level classification
+  riskLevel           RiskLevel?
+  
+  /// Voting timeline
+  votingStartBlock    BigInt?
+  votingEndBlock      BigInt?
+  votingDeadline      DateTime?
+  snapshotBlock       BigInt?
+  
+  /// Vote tallies (cached from chain)
+  forVotes            Decimal?       @db.Decimal(38, 18)
+  againstVotes        Decimal?       @db.Decimal(38, 18)
+  abstainVotes        Decimal?       @db.Decimal(38, 18)
+  
+  /// Proposal targets (for execution)
+  targets             Json?          @db.JsonB
+  values              Json?          @db.JsonB
+  calldatas           Json?          @db.JsonB
+  
+  /// Block number when proposal was detected
+  detectedAtBlock     BigInt?
+  
+  /// On-chain creation transaction hash
+  creationTxHash      String?        @db.VarChar(66)
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  analyzedAt          DateTime?
+  executedAt          DateTime?
+
+  // Relations
+  analyses            Analysis[]
+  auditLogs           AuditLog[]     @relation("ProposalAuditLogs")
+
+  @@unique([onchainProposalId, daoGovernor, chainId])
+  @@index([onchainProposalId])
+  @@index([daoGovernor])
+  @@index([proposerAddress])
+  @@index([status])
+  @@index([compositeRiskScore])
+  @@index([votingDeadline])
+  @@index([createdAt])
+  @@map("proposals")
+}
+
+// ============================================
+// ANALYSES TABLE
+// ============================================
+
+/// Stores AI analysis jobs and results
+model Analysis {
+  id                String         @id @default(uuid()) @db.Uuid
+  
+  /// Unique job identifier (from BullMQ) - MUST BE UNIQUE
+  jobId             String         @unique @db.VarChar(100)
+  
+  /// Related proposal
+  proposalId        String         @db.Uuid
+  proposal          Proposal       @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  
+  /// Wallet that requested the analysis (for billing/rate limiting)
+  requestedById     String?        @db.Uuid
+  requestedBy       Wallet?        @relation("RequestedByWallet", fields: [requestedById], references: [id])
+  
+  /// Analysis status
+  status            AnalysisStatus @default(QUEUED)
+  
+  /// Priority level
+  priority          String         @default("normal") @db.VarChar(20)
+  
+  /// Composite risk score (0-100)
+  compositeRiskScore Float?
+  
+  /// Risk level classification
+  riskLevel         RiskLevel?
+  
+  /// Recommendation: APPROVE, REVIEW, REJECT
+  recommendation    String?        @db.VarChar(20)
+  
+  /// The "Proposal Snapshot" - Structured summary for human reviewers
+  /// Schema: {
+  ///   executiveSummary: string,
+  ///   deliverables: string[],
+  ///   timeline: string,
+  ///   budgetBreakdown: Record<string, number>,
+  ///   riskProfile: { agentAlerts: string[] }
+  /// }
+  snapshot          Json?          @db.JsonB
+  
+  /// Hash of the report stored on-chain/IPFS
+  reportHash        String?        @db.VarChar(66)
+  
+  /// IPFS CID for the full report
+  ipfsReportCid     String?        @db.VarChar(64)
+  
+  /// Callback webhook URL for async results
+  webhookUrl        String?        @db.VarChar(512)
+  
+  /// Whether webhook was successfully delivered
+  webhookDelivered  Boolean        @default(false)
+  
+  /// Processing timestamps
+  queuedAt          DateTime       @default(now())
+  processingStartedAt DateTime?
+  completedAt       DateTime?
+  
+  /// Processing time in milliseconds
+  processingTimeMs  Int?
+  
+  /// Error details if failed
+  errorCode         String?        @db.VarChar(50)
+  errorMessage      String?        @db.Text
+  
+  /// Model version used for analysis
+  modelVersion      String?        @db.VarChar(50)
+  
+  /// Whether result was served from cache
+  cached            Boolean        @default(false)
+  cacheKey          String?        @db.VarChar(64)
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Relations
+  agentResults      AgentResult[]
+  redFlags          RedFlag[]
+
+  @@index([jobId])
+  @@index([proposalId])
+  @@index([status])
+  @@index([requestedById])
+  @@index([queuedAt])
+  @@index([compositeRiskScore])
+  @@map("analyses")
+}
+
+// ============================================
+// AGENT_RESULTS TABLE
+// ============================================
+
+/// Stores individual AI agent analysis results
+model AgentResult {
+  id              String   @id @default(uuid()) @db.Uuid
+  
+  /// Parent analysis
+  analysisId      String   @db.Uuid
+  analysis        Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  /// Agent identifier
+  /// Values: REPUTATION_SENTINEL, NLP_ANALYST, MEDIATOR
+  agentName       String   @db.VarChar(50)
+  
+  /// Agent's risk score (0-100)
+  score           Int
+  
+  /// Agent's reasoning/explanation
+  reasoning       String   @db.Text
+  
+  /// Confidence level (0.0 - 1.0)
+  confidence      Float
+  
+  /// Agent-specific flags detected
+  flags           Json     @default("[]") @db.JsonB
+  
+  /// Agent-specific metadata
+  /// For REPUTATION_SENTINEL: { walletAge, txCount, daoHistory }
+  /// For NLP_ANALYST: { manipulationTactics, toxicityScore }
+  /// For MEDIATOR: { ensembleWeights, agreementLevel }
+  metadata        Json?    @db.JsonB
+  
+  /// Processing time for this agent (ms)
+  processingTimeMs Int?
+  
+  /// LLM tokens used (for billing)
+  tokensUsed      Int?
+
+  createdAt       DateTime @default(now())
+
+  @@unique([analysisId, agentName])
+  @@index([analysisId])
+  @@index([agentName])
+  @@index([score])
+  @@map("agent_results")
+}
+
+// ============================================
+// RED_FLAGS TABLE
+// ============================================
+
+/// Stores specific red flags detected during analysis
+model RedFlag {
+  id              String   @id @default(uuid()) @db.Uuid
+  
+  /// Parent analysis
+  analysisId      String   @db.Uuid
+  analysis        Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  /// Which agent detected this flag
+  agentName       String   @db.VarChar(50)
+  
+  /// Flag category
+  /// Values: SOCIAL_ENGINEERING, FINANCIAL_EXPLOITATION, 
+  ///         GOVERNANCE_ATTACK, DECEPTIVE_PATTERN, REPUTATION_CONCERN
+  category        String   @db.VarChar(50)
+  
+  /// Severity level (1-5, 5 being most severe)
+  severity        Int
+  
+  /// Short title/label for the flag
+  title           String   @db.VarChar(255)
+  
+  /// Detailed description of the concern
+  description     String   @db.Text
+  
+  /// Evidence excerpt from the proposal text
+  evidence        String?  @db.Text
+  
+  /// Confidence that this is a real concern (0.0 - 1.0)
+  confidence      Float
+  
+  /// Recommended action
+  recommendation  String?  @db.VarChar(255)
+
+  createdAt       DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([category])
+  @@index([severity])
+  @@map("red_flags")
+}
+
+// ============================================
+// AUDIT_LOGS TABLE
+// ============================================
+
+/// Immutable audit trail of all system actions
+model AuditLog {
+  id              String      @id @default(uuid()) @db.Uuid
+  
+  /// Action type
+  action          AuditAction
+  
+  /// Related wallet (actor)
+  walletId        String?     @db.Uuid
+  wallet          Wallet?     @relation("WalletAuditLogs", fields: [walletId], references: [id])
+  
+  /// Related proposal
+  proposalId      String?     @db.Uuid
+  proposal        Proposal?   @relation("ProposalAuditLogs", fields: [proposalId], references: [id])
+  
+  /// DAO Governor address (for vote actions)
+  daoGovernor     String?     @db.VarChar(42)
+  
+  /// Vote details (if applicable)
+  voteType        VoteType?
+  riskScore       Int?
+  wasAutoVote     Boolean?
+  
+  /// On-chain transaction hash (if applicable)
+  txHash          String?     @db.VarChar(66)
+  
+  /// Report hash stored on-chain
+  reportHash      String?     @db.VarChar(66)
+  
+  /// IP address hash (for security)
+  ipHash          String?     @db.VarChar(64)
+  
+  /// User agent
+  userAgent       String?     @db.VarChar(512)
+  
+  /// Additional context/metadata
+  metadata        Json?       @db.JsonB
+  
+  /// Human-readable description of the action
+  description     String?     @db.Text
+
+  createdAt       DateTime    @default(now())
+
+  @@index([action])
+  @@index([walletId])
+  @@index([proposalId])
+  @@index([createdAt])
+  @@index([txHash])
+  @@map("audit_logs")
+}
+
+// ============================================
+// REVIEW_QUEUE TABLE
+// ============================================
+
+/// Tracks proposals requiring human review
+model ReviewQueue {
+  id              String    @id @default(uuid()) @db.Uuid
+  
+  /// The proposal requiring review
+  proposalId      String    @unique @db.Uuid
+  
+  /// Assigned reviewer wallet
+  assignedTo      String?   @db.Uuid
+  
+  /// Priority (1 = highest, 10 = lowest)
+  priority        Int       @default(5)
+  
+  /// Why was this flagged for review
+  reason          String    @db.VarChar(255)
+  
+  /// Risk score that triggered the review
+  riskScore       Int?
+  
+  /// Reviewer notes
+  notes           String?   @db.Text
+  
+  /// Review deadline
+  dueAt           DateTime?
+  
+  /// Review completion timestamp
+  reviewedAt      DateTime?
+  
+  /// Review decision
+  decision        String?   @db.VarChar(50)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assignedTo])
+  @@index([priority])
+  @@index([reviewedAt])
+  @@map("review_queue")
+}
+
+// ============================================
+// CACHE_ENTRIES TABLE (Optional - for DB-backed cache)
+// ============================================
+
+/// Database-backed cache for analysis results (backup to Redis)
+model CacheEntry {
+  id              String   @id @default(uuid()) @db.Uuid
+  
+  /// Cache key (hash of proposal content + model version)
+  cacheKey        String   @unique @db.VarChar(64)
+  
+  /// Cached analysis result
+  value           Json     @db.JsonB
+  
+  /// Cache expiration
+  expiresAt       DateTime
+  
+  /// Cache hit count (for analytics)
+  hitCount        Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([cacheKey])
+  @@index([expiresAt])
+  @@map("cache_entries")
+}

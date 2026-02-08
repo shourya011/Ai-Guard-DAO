@@ -1,0 +1,55 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "voter", "type": "address" },
+      { "indexed": false, "internalType": "uint8", "name": "support", "type": "uint8" },
+      { "indexed": false, "internalType": "uint256", "name": "weight", "type": "uint256" },
+      { "indexed": false, "internalType": "string", "name": "reason", "type": "string" }
+    ],
+    "name": "VoteCast",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "proposalId", "type": "uint256" },
+      { "internalType": "address", "name": "voter", "type": "address" }
+    ],
+    "name": "getVoteReceipt",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "bool", "name": "hasVoted", "type": "bool" },
+          { "internalType": "uint8", "name": "support", "type": "uint8" },
+          { "internalType": "uint256", "name": "weight", "type": "uint256" },
+          { "internalType": "string", "name": "reason", "type": "string" }
+        ],
+        "internalType": "struct IVotingEngine.VoteReceipt",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "getVotingStats",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "totalVoters", "type": "uint256" },
+          { "internalType": "uint256", "name": "forVoters", "type": "uint256" },
+          { "internalType": "uint256", "name": "againstVoters", "type": "uint256" },
+          { "internalType": "uint256", "name": "abstainVoters", "type": "uint256" }
+        ],
+        "internalType": "struct IVotingEngine.VotingStats",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

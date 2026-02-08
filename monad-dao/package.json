@@ -1,0 +1,31 @@
+{
+  "name": "monad-dao",
+  "version": "1.0.0",
+  "description": "Basic DAO implementation for Monad blockchain",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:monad": "npx hardhat run scripts/deploy.js --network monadTestnet",
+    "node": "npx hardhat node",
+    "clean": "npx hardhat clean"
+  },
+  "keywords": [
+    "dao",
+    "monad",
+    "blockchain",
+    "governance",
+    "solidity"
+  ],
+  "author": "Monad DAO Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^17.2.3"
+  }
+}

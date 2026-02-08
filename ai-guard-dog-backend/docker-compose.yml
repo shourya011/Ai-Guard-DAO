@@ -1,0 +1,97 @@
+# AI Guard Dog Backend - Docker Compose Configuration
+# 
+# This file orchestrates all backend services:
+# - PostgreSQL database
+# - Python Intelligence Layer (FastAPI)
+# - Node.js Orchestrator (Express)
+#
+# Usage:
+#   docker-compose up -d        # Start all services
+#   docker-compose logs -f      # View logs
+#   docker-compose down         # Stop all services
+
+version: '3.8'
+
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # PostgreSQL Database
+  # ═══════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-guard-dog-db
+    environment:
+      POSTGRES_DB: ai_guard_dog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: guarddog123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_guard_dog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-guard-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Python Intelligence Layer (FastAPI)
+  # ═══════════════════════════════════════════════════════════════
+  intelligence:
+    build:
+      context: ./intelligence
+      dockerfile: Dockerfile
+    container_name: ai-guard-dog-intelligence
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ai-guard-network
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════
+  # Node.js Orchestrator (Express)
+  # ═══════════════════════════════════════════════════════════════
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: ai-guard-dog-orchestrator
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=ai_guard_dog
+      - DB_USER=postgres
+      - DB_PASSWORD=guarddog123
+      - INTELLIGENCE_API_URL=http://intelligence:8000
+      - MONAD_RPC_URL=http://host.docker.internal:8545
+    depends_on:
+      postgres:
+        condition: service_healthy
+      intelligence:
+        condition: service_healthy
+    networks:
+      - ai-guard-network
+    restart: unless-stopped
+
+# ═══════════════════════════════════════════════════════════════
+# Networks & Volumes
+# ═══════════════════════════════════════════════════════════════
+networks:
+  ai-guard-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

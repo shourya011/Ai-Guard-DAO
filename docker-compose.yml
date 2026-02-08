@@ -1,0 +1,85 @@
+version: '3.8'
+
+# AI Guard Dog - Local Development Infrastructure
+# Run with: docker-compose up -d
+
+services:
+  # ─────────────────────────────────────────────────────────────────
+  # PostgreSQL Database with pgvector extension
+  # ─────────────────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ai-guard-postgres
+    environment:
+      POSTGRES_USER: ai_guard
+      POSTGRES_PASSWORD: ai_guard_secret
+      POSTGRES_DB: ai_guard_dao
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_guard -d ai_guard_dao"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ai-guard-network
+
+  # ─────────────────────────────────────────────────────────────────
+  # Redis (BullMQ Queue + Caching)
+  # ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ai-guard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # noeviction required by BullMQ to prevent job data loss
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ai-guard-network
+
+  # ─────────────────────────────────────────────────────────────────
+  # Redis Commander (Optional - Redis UI)
+  # Access at: http://localhost:8081
+  # ─────────────────────────────────────────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ai-guard-redis-ui
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - ai-guard-network
+    profiles:
+      - tools  # Only starts with: docker-compose --profile tools up -d
+
+# ─────────────────────────────────────────────────────────────────
+# Persistent Volumes
+# ─────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: ai-guard-postgres-data
+  redis_data:
+    name: ai-guard-redis-data
+
+# ─────────────────────────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────────────────────────
+networks:
+  ai-guard-network:
+    name: ai-guard-network
+    driver: bridge

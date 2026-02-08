@@ -1,0 +1,331 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_auditLogger", "type": "address" },
+      { "name": "_initialBackend", "type": "address" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "delegateVotingPower",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" },
+      { "name": "riskThreshold", "type": "uint256" },
+      { "name": "requireApproval", "type": "bool" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revokeDelegation",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revokeAll",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "approveHighRiskVote",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" },
+      { "name": "proposalId", "type": "uint256" },
+      { "name": "support", "type": "uint8" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateRiskThreshold",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" },
+      { "name": "newThreshold", "type": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castVoteWithRisk",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" },
+      { "name": "proposalId", "type": "uint256" },
+      { "name": "user", "type": "address" },
+      { "name": "support", "type": "uint8" },
+      { "name": "riskScore", "type": "uint256" },
+      { "name": "riskReportHash", "type": "bytes32" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castMultipleVotes",
+    "inputs": [
+      { "name": "daoGovernor", "type": "address" },
+      { "name": "proposalIds", "type": "uint256[]" },
+      { "name": "users", "type": "address[]" },
+      { "name": "supports", "type": "uint8[]" },
+      { "name": "riskScores", "type": "uint256[]" },
+      { "name": "reportHashes", "type": "bytes32[]" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getDelegation",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "daoGovernor", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "active", "type": "bool" },
+      { "name": "riskThreshold", "type": "uint256" },
+      { "name": "delegatedAt", "type": "uint256" },
+      { "name": "requiresApproval", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "delegations",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "daoGovernor", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "active", "type": "bool" },
+      { "name": "riskThreshold", "type": "uint256" },
+      { "name": "delegatedAt", "type": "uint256" },
+      { "name": "requiresApproval", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userDAOs",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "index", "type": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingApprovals",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "proposalId", "type": "uint256" },
+      { "name": "daoGovernor", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "auditLogger",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "authorizedBackends",
+    "inputs": [
+      { "name": "backend", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "admin",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "paused",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_RISK_THRESHOLD",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MEDIUM_RISK_THRESHOLD",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "VotingPowerDelegated",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "daoGovernor", "type": "address", "indexed": true },
+      { "name": "riskThreshold", "type": "uint256", "indexed": false }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "DelegationRevoked",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "daoGovernor", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AllDelegationsRevoked",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "VoteCastByAI",
+    "inputs": [
+      { "name": "proposalId", "type": "uint256", "indexed": true },
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "support", "type": "uint8", "indexed": false },
+      { "name": "riskScore", "type": "uint256", "indexed": false }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "HighRiskProposalDetected",
+    "inputs": [
+      { "name": "proposalId", "type": "uint256", "indexed": true },
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "riskScore", "type": "uint256", "indexed": false }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ApprovalRequired",
+    "inputs": [
+      { "name": "proposalId", "type": "uint256", "indexed": true },
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "riskScore", "type": "uint256", "indexed": false }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "HighRiskVoteApproved",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "proposalId", "type": "uint256", "indexed": true },
+      { "name": "support", "type": "uint8", "indexed": false }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ContractPaused",
+    "inputs": [
+      { "name": "by", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ContractUnpaused",
+    "inputs": [
+      { "name": "by", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "BackendAuthorized",
+    "inputs": [
+      { "name": "backend", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "BackendRevoked",
+    "inputs": [
+      { "name": "backend", "type": "address", "indexed": true }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidThreshold",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotDelegated",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ContractIsPaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedBackend",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyAdmin",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyDelegated",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoPendingApproval",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSupport",
+    "inputs": []
+  }
+]
